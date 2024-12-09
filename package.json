@@ -1,0 +1,45 @@
+{
+  "name": "nodecg-demo-bundle",
+  "version": "0.0.0",
+  "description": "A demo bundle to show off some NodeCG features!",
+  "homepage": "",
+  "author": {
+    "name": "Derek Bond",
+    "email": "derek.bond24@gmail.com",
+    "url": "https://derek-bond.dev"
+  },
+  "files": [
+    "dashboard",
+    "graphics",
+    "extension.js",
+    "extension"
+  ],
+  "keywords": [
+    "nodecg",
+    "demo",
+    "nodecg-bundle"
+  ],
+  "nodecg": {
+    "compatibleRange": "^2.2.5",
+    "dashboardPanels": [
+      {
+        "name": "panel",
+        "title": "Panel",
+        "file": "panel.html",
+        "fullbleed": true,
+        "headerColor": "#525F78"
+      }
+    ],
+    "graphics": [
+      {
+        "file": "graphic.html",
+        "width": 1920,
+        "height": 1080
+      }
+    ]
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "cd ../.. && node index"
+  }
+}

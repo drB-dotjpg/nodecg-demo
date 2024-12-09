@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+
+	<!-- Grab the font 'Space Grotesk' from the CDN -->
+	<link href="https://api.fontshare.com/v2/css?f[]=space-grotesk@600&display=swap" rel="stylesheet">
+
+	<!-- Grab GSAP base and GSAP's text plugin from the CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/TextPlugin.min.js"></script>
+
+	<style>
+		body {
+			background: darkslategrey;
+			font-family: 'Space Grotesk', sans-serif;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			width: 100vw;
+			height: 100vh;
+			position: relative;
+			margin: 0;
+			font-size: 2rem;
+			overflow: hidden;
+		}
+
+		.element {
+			width: 80%;
+			background-color: white;
+			color: black;
+			border-radius: .5rem;
+			box-shadow: 0 0 1rem rgba(0, 0, 0, .5);
+			overflow: hidden;
+			text-align: center;
+		}
+
+		.popup {
+			opacity: 0;
+			color: white;
+			position: absolute;
+			margin: 0 auto;
+			bottom: 16px;
+			width: 50%;
+			padding: 2rem;
+			background-color: darkslateblue;
+			border: 2px solid white;
+			border-radius: .5rem;
+			text-align: center;
+		}
+	</style>
+
+	<script>
+		//register GSAP plugins
+		gsap.registerPlugin(TextPlugin)
+
+		/*
+		declare the 'elements' replicant.
+		this is a persistant value: it will take the last value of what the replicant was set to, even after refreshing or restarting the server.
+		replicants also persist throughout the entire server, so you can access the same replicant from different dashboards and graphics.
+		if there is no value, take on the default value of an array with 3 objects, each with a 'visible' and 'text' property.
+		*/
+		const elementsReplicant = nodecg.Replicant('elements', {
+			defaultValue: Array.from({ length: 3 }, e => {
+				return {
+					visible: true,
+					text: 'Element'
+				}
+			})
+		});
+
+		//wait for the replicant to be ready before doing anything, otherwise the replicant will be undefined.
+		NodeCG.waitForReplicants(elementsReplicant).then(() => {
+
+			//when the replicant changes, this function will be called. The new and old value of the replicant is passed in as an argument.
+			elementsReplicant.on('change', (newValue, oldVal) => {
+
+				//if oldVal is undefined, which means the page just loaded
+				if (!oldVal) {
+
+					//loop through each element in the array and initialize all elements
+					for (let i = 0; i < newValue.length; i++) {
+						gsap.set(`.element[data-index="${i}"]`, {
+							text: newValue[i].text,
+							opacity: newValue[i].visible ? 1 : 0,
+							margin: newValue[i].visible ? '1rem' : 0,
+							padding: newValue[i].visible ? '2rem' : 0,
+							height: newValue[i].visible ? 'auto' : 0
+						});
+					}
+				}
+
+				//loop through each element in the array and animate all changes
+				for (let i = 0; i < newValue.length; i++) {
+					gsap.to(`.element[data-index="${i}"]`, {
+						text: newValue[i].text,
+						opacity: newValue[i].visible ? 1 : 0,
+						margin: newValue[i].visible ? '1rem' : 0,
+						padding: newValue[i].visible ? '2rem' : 0,
+						height: newValue[i].visible ? 'auto' : 0,
+						duration: .5,
+						ease: 'power2.inOut'
+					});
+				}
+			});
+		});
+
+		//listen for a message from the dashboard
+		nodecg.listenFor('message', () => {
+
+			//create a GSAP timeline, which allows you to chain animations together
+			const timeline = gsap.timeline();
+
+			timeline.fromTo('.popup', {
+				y: 100 //start from y=100
+			}, {
+				y: 0, //then go to y=0
+				opacity: 1,
+				duration: .5,
+				ease: 'power2.out'
+			});
+
+			timeline.to('.popup', {
+				y: 100,
+				opacity: 0,
+				duration: .5,
+				ease: 'power2.in'
+			}, '+=3'); //'+=3' means wait 3 seconds doing this animation
+		})
+	</script>
+
+</head>
+
+<body>
+	<div class="element" data-index="0"></div>
+	<div class="element" data-index="1"></div>
+	<div class="element" data-index="2"></div>
+	<div class="popup">Message Received!</div>
+</body>
+
+</html>

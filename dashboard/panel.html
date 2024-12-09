@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+
+	<!-- Grab the font 'Space Grotesk' from the CDN -->
+	<link href="https://api.fontshare.com/v2/css?f[]=space-grotesk@600&display=swap" rel="stylesheet">
+
+	<style>
+		body {
+			background: black;
+			color: white;
+			padding: 2rem;
+			font-size: 2rem;
+			font-family: 'Space Grotesk', sans-serif !important;
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+		}
+
+		h3 {
+			margin: .5em 0;
+		}
+
+		.container {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 2rem;
+			padding: 1rem 2rem;
+			border: 1px solid grey;
+			border-radius: .5rem;
+		}
+
+		input[type="text"] {
+			flex-grow: 1;
+			padding: .5rem;
+			border-radius: .5rem;
+			border: 1px solid white;
+			background-color: darkslategray;
+			color: white;
+			font-size: 1em;
+			font-family: inherit;
+		}
+
+		input[type="checkbox"] {
+			transform-origin: bottom center;
+			transform: scale(1.6);
+		}
+
+		button {
+			padding: .5rem;
+			border-radius: .5rem;
+			border: 1px solid white;
+			background-color: darkslategray;
+			color: white;
+			font-size: 1em;
+			font-family: inherit;
+			cursor: pointer;
+		}
+	</style>
+
+	<script>
+		/*
+		declare the 'elements' replicant.
+		this is a persistant value: it will take the last value of what the replicant was set to, even after refreshing or restarting the server.
+		replicants also persist throughout the entire server, so you can access the same replicant from different dashboards and graphics.
+		if there is no value, take on the default value of an array with 3 objects, each with a 'visible' and 'text' property.
+		*/
+		const elementsReplicant = nodecg.Replicant('elements', {
+			defaultValue: Array.from({ length: 3 }, e => {
+				return {
+					visible: true,
+					text: 'Element'
+				}
+			})
+		});
+
+		//wait for the replicant to be ready before doing anything, otherwise the replicant will be undefined.
+		NodeCG.waitForReplicants(elementsReplicant).then(() => {
+
+			//when the replicant changes, this function will be called. The new value of the replicant is passed in as an argument.
+			elementsReplicant.on('change', (newValue) => {
+
+				//loop through each element in the array and update the HTML DOM
+				for (let i = 0; i < newValue.length; i++) {
+					const domElement = document.querySelector(`.element-control[data-index="${i}"]`);
+					const val = newValue[i];
+
+					//change visibility
+					domElement.querySelector('.visible').checked = val.visible;
+
+					//change input element
+					domElement.querySelector('.text').value = val.text;
+				}
+			});
+
+			//when the 'Save' button is clicked, this function will be called.
+			document.querySelector('#save-button').onclick = () => {
+
+				const copy = [];
+
+				//loop through each element in the array and update the replicant
+				document.querySelectorAll('.element-control').forEach((element, i) => {
+					const visible = element.querySelector('.visible').checked;
+					const text = element.querySelector('.text').value;
+					copy.push({
+						visible,
+						text
+					});
+				});
+
+				/*
+				set the replicant to the new value.
+				we create a copy then set the replicant at the end because we want to fire the 'change' event once.
+				we use JSON.parse(JSON.stringify(copy)) to create a deep copy of the array.
+				*/
+				elementsReplicant.value = JSON.parse(JSON.stringify(copy));
+			}
+
+			//when the 'Send Message' button is clicked, this function will be called.
+			document.querySelector('#message-button').onclick = () => {
+
+				//send a message to all dashboards and graphics listening to 'message'
+				nodecg.sendMessage('message');
+			}
+		})
+	</script>
+
+</head>
+
+<body>
+
+	<h3>Elements</h3>
+	<div class="container element-control" data-index="0">
+		<label for="element-0">
+			Visible
+			<input class="visible" type="checkbox" id="element-0">
+		</label>
+		<input class="text" type="text">
+	</div>
+	<div class="container element-control" data-index="1">
+		<label for="element-1">
+			Visible
+			<input class="visible" type="checkbox" id="element-1">
+		</label>
+		<input class="text" type="text">
+	</div>
+	<div class="container element-control" data-index="2">
+		<label for="element-2">
+			Visible
+			<input class="visible" type="checkbox" id="element-2">
+		</label>
+		<input class="text" type="text">
+	</div>
+
+	<h3>Controls</h3>
+	<div class="container">
+		<button id="save-button">Save</button>
+		<button id="message-button">Send Message</button>
+	</div>
+
+</body>
+
+</html>
